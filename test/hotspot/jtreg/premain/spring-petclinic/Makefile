@@ -47,8 +47,8 @@ JDK17_JAVA       = ${JDK17_HOME}/bin/java
 PREMAIN_JAVA     = ${PREMAIN_HOME}/bin/java
 PC_REPO          = petclinic-snapshot
 PC_APP_JAVA      = ${PC_REPO}/src/main/java/org/springframework/samples/petclinic/PetClinicApplication.java
-PC_APP_JAR       = ${PC_REPO}/target/spring-petclinic-3.1.0-SNAPSHOT.jar
-PC_APP_UNPACKED  = ${PC_REPO}/target/unpacked
+PC_APP_JAR       = ${PC_REPO}/build/libs/spring-petclinic-1.0.0-SNAPSHOT.jar
+PC_APP_UNPACKED  = ${PC_REPO}/build/unpacked
 PC_MAIN_CLASS    = org.springframework.samples.petclinic.PetClinicApplication
 PC_CLASSLIST     = spring-petclinic.classlist
 PC_STATIC_JSA    = spring-petclinic.static.jsa
@@ -85,16 +85,16 @@ dynamic: ${PC_DYNAMIC_JSA}
 aot: ${PC_CACHED_CODE}
 
 # Check out this specific version of spring-petclinic that we have been testing with.
-# https://github.com/spring-projects/spring-petclinic/commit/18266fec8b33664444efbc45ad5d641b3210a58c
 ${PC_APP_JAVA}: premain-patch.diff
 	rm -rf ${PC_REPO}
-	git clone https://github.com/spring-projects/spring-petclinic ${PC_REPO}
-	cd ${PC_REPO}; git reset --hard 18266fec8b33664444efbc45ad5d641b3210a58c
+	git clone https://github.com/sdeleuze/spring-petclinic-data-jdbc.git ${PC_REPO}
+	cd ${PC_REPO}; git checkout jvmaot
 	cd ${PC_REPO}; git apply ../premain-patch.diff
+	
 
-# Need to touch ${PC_APP_JAR} as mvn wants to set it to May 10, 2023!
+# Need to touch ${PC_APP_JAR}
 ${PC_APP_JAR}: ${PC_APP_JAVA}
-	cd ${PC_REPO}; JAVA_HOME=${JDK17_HOME} mvn package
+	cd ${PC_REPO}; JAVA_HOME=${JDK17_HOME} ./gradlew build -x test
 	if test -f ${PC_APP_JAR}; then \
 	    touch ${PC_APP_JAR}; \
 	fi
@@ -103,7 +103,7 @@ ${PC_APP_UNPACKED}: ${PC_APP_JAR}
 	rm -rf ${PC_APP_UNPACKED}
 	mkdir -p ${PC_APP_UNPACKED}
 	cd ${PC_APP_UNPACKED} && \
-	    ${JAR_CMD} xf ../spring-petclinic-3.1.0-SNAPSHOT.jar && \
+	    ${JAR_CMD} xf ../libs/spring-petclinic-1.0.0-SNAPSHOT.jar && \
 	    ${JAR_CMD} cf classes.jar META-INF org && \
             cd BOOT-INF/classes/ && \
 	    ${JAR_CMD} cf classes.jar *
